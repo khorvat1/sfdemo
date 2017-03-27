@@ -1,7 +1,13 @@
 package ch.sf.demo.service.impl;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +24,8 @@ import ch.sf.demo.xml.Inventory;
 @Service
 public class ShoppingCartServiceImpl implements ShoppingCartService {
 
+	final static Logger log = Logger.getLogger(ShoppingCartServiceImpl.class);
+
 	@Autowired
 	private XmlReaderService xmlReaderService;
 
@@ -27,7 +35,6 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 	@Autowired
 	private ShoppingCartDao shoppingCartDao;
 
-	
 	@Transactional(rollbackFor = java.lang.Exception.class)
 	public void createShoppingCartFromFileData(String relativePath) throws Exception {
 
@@ -44,18 +51,33 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 	@Transactional(rollbackFor = java.lang.Exception.class)
 	public void createShopingCart(Inventory inventory) throws Exception {
 
-		ShoppingCart sc = new ShoppingCart();
-		sc.setDetails(new ArrayList<ShoppingCartDetails>());
+		try {
+			ShoppingCart sc = new ShoppingCart();
+			List<ShoppingCartDetails> scdList = new ArrayList<ShoppingCartDetails>();
 
-		for (ch.sf.demo.xml.Item i : inventory.getItems()) {
-			Item dbItem = this.itemDao.getByCodeTwo(i.getValueZero().getValue().toString());
-			ShoppingCartDetails scd = new ShoppingCartDetails();
-			scd.setItemCustomized(dbItem);
-			scd.setShopingCart(sc);
-			sc.getDetails().add(scd);
+			for (ch.sf.demo.xml.Item i : inventory.getItems()) {
+				Item dbItem = this.itemDao.getByCodeTwo(i.getValueZero().getValue().toString());
+				if (dbItem == null) {
+					throw new Exception("No data for xml value0");
+				}
+
+				ShoppingCartDetails scd = new ShoppingCartDetails();
+				scd.setItemCustomized(dbItem);
+				scd.setQuantity(i.getValueTwo().getValue().longValue());
+				scd.setShopingCart(sc);
+				scdList.add(scd);
+			}
+
+			sc.setDetails(scdList);
+			shoppingCartDao.insert(sc);
+			
+		} catch (ConstraintViolationException e) {
+			Set<ConstraintViolation<?>> errors = e.getConstraintViolations();
+			for (Object o : errors) {
+				log.error(o.toString());
+			}
+			throw e;
 		}
-
-		shoppingCartDao.insert(sc);
 
 	}
 

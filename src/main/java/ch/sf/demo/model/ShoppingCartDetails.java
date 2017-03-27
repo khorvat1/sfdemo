@@ -8,6 +8,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.Min;
 
 /**
  * Entity class for database object fs_shop.warenkorbdetails
@@ -36,6 +37,7 @@ public class ShoppingCartDetails {
 	private String designationTwo;
 	
 	@Column(name="MENGE")
+	@Min(value = 1L)
 	private Long quantity;
 
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -115,13 +117,11 @@ public class ShoppingCartDetails {
 	 * @param item 
 	 */
 	public void setItemCustomized(Item item){
-		if (item != null){
-			this.item = item;
-			this.itemNumberOne = item.getNumberOne();
-			this.itemNumberTwo = item.getNumberTwo();
-			this.designationOne = item.getDesignationOne();
-			this.designationTwo = item.getDesignationTwo();
-		}
+		this.item = item;
+		this.itemNumberOne = item.getNumberOne();
+		this.itemNumberTwo = item.getNumberTwo();
+		this.designationOne = item.getDesignationOne();
+		this.designationTwo = item.getDesignationTwo();
 	}
 
 }

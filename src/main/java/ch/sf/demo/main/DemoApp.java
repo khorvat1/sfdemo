@@ -36,6 +36,7 @@ public class DemoApp {
 			 * persist data to db
 			 */
 			demoApp.shoppingCartService.createShoppingCartFromFileData(xmlDataFile);
+			log.info("Shopping cart successfully created");
 			
 		} catch (Exception e) {
 			log.error("Error in shoping cart creation", e);
